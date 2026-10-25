@@ -1,19 +1,19 @@
 // Service worker: lets TremorSense open and run with no internet.
 // Bump VERSION whenever you change any app file so phones get the update.
-const VERSION = 'tremorsense-v4';
+const VERSION = 'tremorsense-v5';
 const FILES = [
   './',
   'index.html',
   'styles.css',
   'manifest.webmanifest',
-  'js/app.js',
-  'js/dsp.js',
-  'js/interpret.js',
-  'icons/icon.svg',
-  'icons/icon-192.png',
-  'icons/icon-512.png',
-  'icons/apple-touch-icon.png',
-  'icons/share.png',
+  'app.js',
+  'dsp.js',
+  'interpret.js',
+  'icon.svg',
+  'icon-192.png',
+  'icon-512.png',
+  'apple-touch-icon.png',
+  'share.png',
 ];
 
 self.addEventListener('install', (e) => {

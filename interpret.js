@@ -6,7 +6,7 @@
 // We'll rewrite it together, line by line, and you'll set the
 // thresholds using your own validation test results.
 //
-// Input  (result): numbers from the DSP engine (js/dsp.js)
+// Input  (result): numbers from the DSP engine (dsp.js)
 //   result.peakHz    strongest shaking frequency, 3–12 Hz
 //   result.peakAmp   how strong that shaking is (m/s²)
 //   result.bandRatio share of all motion that's in the tremor band (0–1)

@@ -1,7 +1,7 @@
 // Validation test: feed fake tremors with KNOWN frequencies through the
 // real pipeline and check that TremorSense finds the right answer.
-// Run with:  node tests/validate.mjs
-import { analyze, synthesize } from '../js/dsp.js';
+// Run with:  node validate.mjs
+import { analyze, synthesize } from './dsp.js';
 
 const cases = [
   { freqHz: 4, amp: 0.3 },

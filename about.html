@@ -11,14 +11,14 @@
   <meta property="og:title" content="How TremorSense works">
   <meta property="og:description" content="A phone app that measures how fast and how strongly a hand shakes. Try the math yourself and see how it was tested.">
   <meta property="og:url" content="https://abhinav360k-rgb.github.io/tremorsense/about.html">
-  <meta property="og:image" content="https://abhinav360k-rgb.github.io/tremorsense/icons/share.png">
+  <meta property="og:image" content="https://abhinav360k-rgb.github.io/tremorsense/share.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#FBFCFA" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#142120" media="(prefers-color-scheme: dark)">
-  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
@@ -216,7 +216,7 @@
       <div class="wrap">
         <h2 id="report">The doctor report</h2>
         <figure class="report-fig">
-          <img src="images/sample-report.png" width="935" height="1210"
+          <img src="sample-report.png" width="935" height="1210"
                alt="A one-page tremor report with a summary table, a strength-over-time chart and a list of tests">
           <figcaption class="story">
             <p>After a few days of tests, the app makes a one-page report that can be printed or saved as a PDF. It shows the typical tremor speed and strength for each position, a chart of how strength changed over time, and every test with its date.</p>
@@ -247,7 +247,7 @@
   </footer>
 
   <script type="module">
-    import { analyze, synthesize, BAND_LOW, BAND_HIGH, MAX_DISPLAY_HZ } from './js/dsp.js';
+    import { analyze, synthesize, BAND_LOW, BAND_HIGH, MAX_DISPLAY_HZ } from './dsp.js';
 
     const $ = (s) => document.querySelector(s);
     const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();

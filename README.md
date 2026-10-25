@@ -33,15 +33,15 @@ TremorSense is an installable web app (a Progressive Web App). Open it on a phon
 | `index.html` | All the app screens |
 | `about.html` | Project website: why it exists, a live demo of the math, validation tests, limits |
 | `styles.css` | Look and feel: large buttons, high contrast, dark mode |
-| `js/dsp.js` | Signal processing: resampling, filter, FFT |
-| `js/interpret.js` | Turns the numbers into a plain-language summary (**written by the student**) |
-| `js/app.js` | Screens, sensor recording, charts, saving results |
-| `sw.js`, `manifest.webmanifest`, `icons/`, `images/` | Make it installable and work offline |
-| `tests/validate.mjs` | Validation: known fake tremors must be detected correctly |
+| `dsp.js` | Signal processing: resampling, filter, FFT |
+| `interpret.js` | Turns the numbers into a plain-language summary (**written by the student**) |
+| `app.js` | Screens, sensor recording, charts, saving results |
+| `sw.js`, `manifest.webmanifest`, icon and image files | Make it installable and work offline |
+| `validate.mjs` | Validation: known fake tremors must be detected correctly |
 
 ## Validation
 
-Run `node tests/validate.mjs`. It feeds simulated tremors at 4, 5, 6, 8, 10 and 12 Hz (with gravity, drift, noise and uneven timing) through the real pipeline. Current results: **8/8 pass**. Frequency is within 0.15 Hz and amplitude within 10% in every case, and a steady hand is correctly reported as no tremor.
+Run `node validate.mjs`. It feeds simulated tremors at 4, 5, 6, 8, 10 and 12 Hz (with gravity, drift, noise and uneven timing) through the real pipeline. Current results: **8/8 pass**. Frequency is within 0.15 Hz and amplitude within 10% in every case, and a steady hand is correctly reported as no tremor.
 
 ## Try it without a phone
 

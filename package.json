@@ -1,1 +1,1 @@
-{"type":"module","name":"tremorsense","private":true,"scripts":{"test":"node tests/validate.mjs"}}
+{"type":"module","name":"tremorsense","private":true,"scripts":{"test":"node validate.mjs"}}
