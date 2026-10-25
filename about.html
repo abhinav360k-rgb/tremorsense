@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How TremorSense works</title>
+  <meta name="description" content="TremorSense turns a phone's motion sensor into a tremor measuring tool. See how it works, try the math yourself, and see how it was tested.">
+  <link rel="canonical" href="https://abhinav360k-rgb.github.io/tremorsense/about.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TremorSense">
+  <meta property="og:title" content="How TremorSense works">
+  <meta property="og:description" content="A phone app that measures how fast and how strongly a hand shakes. Try the math yourself and see how it was tested.">
+  <meta property="og:url" content="https://abhinav360k-rgb.github.io/tremorsense/about.html">
+  <meta property="og:image" content="https://abhinav360k-rgb.github.io/tremorsense/icons/share.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#FBFCFA" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#142120" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #FBFCFA; --grid-minor: #E3EEE7; --grid-major: #C3DACB;
+      --ink: #1B2A2F; --ink-soft: #52646A; --rule: #D5DFDA; --pen: #C8312B;
+      --band-a: rgba(200, 120, 20, 0.13); --band-b: rgba(40, 90, 160, 0.11); --on-ink: #FBFCFA;
+      --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px; --s9: 96px;
+      --font: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --measure: 36rem; --wide: 60rem; --gutter: 20px;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #142120; --grid-minor: #1C2E2C; --grid-major: #2A4440;
+        --ink: #E6EEEB; --ink-soft: #9DB0AB; --rule: #2C3F3C; --pen: #FF7A6B;
+        --band-a: rgba(240, 160, 70, 0.14); --band-b: rgba(110, 160, 240, 0.14); --on-ink: #142120;
+        color-scheme: dark;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 19px/1.55 var(--font); }
+    a { color: inherit; text-underline-offset: 3px; }
+    :focus-visible { outline: 3px solid var(--pen); outline-offset: 3px; }
+    h1, h2, h3 { margin: 0; line-height: 1.15; }
+    p { margin: 0; }
+    .wrap { max-width: var(--wide); margin: 0 auto; padding: 0 var(--gutter); }
+    .measure { max-width: var(--measure); }
+    .soft { color: var(--ink-soft); }
+    .num { font-variant-numeric: tabular-nums; }
+
+    header.top { display: flex; justify-content: space-between; align-items: center; gap: var(--s4); padding-block: var(--s5); }
+    .mark { display: flex; align-items: center; gap: var(--s2); font-weight: 700; text-decoration: none; }
+    .mark svg { width: 28px; height: 28px; }
+
+    .hero { padding-block: var(--s7) var(--s6); display: flex; flex-direction: column; gap: var(--s5); }
+    .hero h1 { font-size: clamp(40px, 9vw, 72px); letter-spacing: -0.02em; max-width: 12em; }
+    .hero p { font-size: 22px; max-width: 30em; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 64px; padding: 0 var(--s6);
+      border-radius: 14px; background: var(--ink); color: var(--on-ink); font-weight: 700; font-size: 21px; text-decoration: none; }
+    .btn:active { opacity: 0.85; }
+    .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4) var(--s5); }
+
+    .paper {
+      border-top: 2px solid var(--grid-major); border-bottom: 2px solid var(--grid-major);
+      background-color: var(--paper);
+      background-image:
+        linear-gradient(var(--grid-major) 1px, transparent 1px), linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+        linear-gradient(var(--grid-minor) 1px, transparent 1px), linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+      background-size: 40px 40px, 40px 40px, 8px 8px, 8px 8px; background-position: -1px -1px;
+    }
+    .paper canvas { display: block; width: 100%; }
+    #hero-trace { height: 160px; }
+
+    section.block { padding-block: var(--s8); border-top: 1px solid var(--rule); }
+    section.block > .wrap { display: flex; flex-direction: column; gap: var(--s5); }
+    h2 { font-size: clamp(30px, 6vw, 40px); letter-spacing: -0.01em; }
+    h3 { font-size: 22px; }
+
+    /* Try it */
+    .lab { display: grid; gap: var(--s5); }
+    @media (min-width: 820px) { .lab { grid-template-columns: 17rem 1fr; align-items: start; } }
+    .controls { display: flex; flex-direction: column; gap: var(--s5); }
+    .control label { display: flex; justify-content: space-between; gap: var(--s3); font-weight: 700; }
+    .control output { font-weight: 400; font-variant-numeric: tabular-nums; }
+    input[type=range] { width: 100%; height: 44px; accent-color: var(--pen); margin: 0; }
+    .check { display: flex; gap: var(--s3); align-items: flex-start; font-size: 17px; cursor: pointer; }
+    .check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--pen); flex: none; }
+    .charts { display: flex; flex-direction: column; gap: var(--s3); min-width: 0; }
+    .chart-label { font-weight: 700; font-size: 17px; }
+    #demo-signal { height: 140px; }
+    #demo-spectrum { height: 220px; }
+    .found { font-size: 22px; }
+    .found strong { font-size: 30px; font-variant-numeric: tabular-nums; }
+    .warn { color: var(--pen); font-weight: 700; }
+
+    /* Steps: this really is a sequence, so it's numbered */
+    .steps { list-style: none; margin: 0; padding: 0; counter-reset: step; max-width: var(--measure); }
+    .steps li { counter-increment: step; display: grid; grid-template-columns: 2.5rem 1fr; gap: 0 var(--s3);
+      padding-block: var(--s4); border-top: 1px solid var(--rule); }
+    .steps li::before { content: counter(step); font-weight: 700; font-size: 24px; line-height: 1.2; color: var(--pen); grid-row: span 2; }
+    .steps h3 { margin-bottom: var(--s2); }
+
+    table { width: 100%; max-width: var(--measure); border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 17px; }
+    th { text-align: left; color: var(--ink-soft); font-weight: 700; padding: var(--s2) var(--s3) var(--s2) 0; border-bottom: 2px solid var(--ink); }
+    td { padding: var(--s2) var(--s3) var(--s2) 0; border-bottom: 1px solid var(--rule); }
+    .pass { font-weight: 700; }
+    .fail { font-weight: 700; color: var(--pen); }
+
+    .story { display: flex; flex-direction: column; gap: var(--s4); max-width: var(--measure); }
+    .report-fig { margin: 0; display: grid; gap: var(--s5); }
+    @media (min-width: 820px) { .report-fig { grid-template-columns: 1fr 1fr; align-items: center; } }
+    .report-fig img { width: 100%; height: auto; border: 1px solid var(--rule); background: #fff; }
+    .limits { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: var(--s3); max-width: var(--measure); }
+
+    footer { border-top: 1px solid var(--rule); padding-block: var(--s6) var(--s7); font-size: 17px; }
+    footer .wrap { display: flex; flex-direction: column; gap: var(--s3); }
+  </style>
+</head>
+<body>
+  <header class="wrap top">
+    <a class="mark" href="./about.html" aria-label="TremorSense">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M2 22 H9 L12 15 L16 29 L20 9 L24 31 L27 17 L30 24 L32 22 H38" fill="none" stroke="var(--pen)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      TremorSense
+    </a>
+    <a href="./">Open the app</a>
+  </header>
+
+  <main>
+    <div class="wrap hero">
+      <h1>A tremor, measured with the phone in your pocket</h1>
+      <p class="soft">TremorSense uses a phone's motion sensor to measure how fast and how strongly a hand shakes, then turns repeated tests into a report a patient can bring to their doctor.</p>
+      <div class="hero-actions">
+        <a class="btn" href="./">Open the app</a>
+        <span class="soft">Free. Runs in the phone's browser on iPhone and Android, with nothing to download.</span>
+      </div>
+    </div>
+    <div class="paper"><canvas id="hero-trace" aria-hidden="true"></canvas></div>
+
+    <section class="block" aria-labelledby="why">
+      <div class="wrap">
+        <h2 id="why">Why I built it</h2>
+        <div class="story">
+          <p>Tremors from conditions like Parkinson's disease and essential tremor change from hour to hour. They can get better or worse as medication wears off, with stress, or with tiredness. But a neurologist usually sees a patient for a short visit every few months and judges the tremor by eye.</p>
+          <p>Almost every phone already has an accelerometer that measures motion many times a second. TremorSense uses it to give patients a way to measure their tremor at home, as often as they like, and show their doctor numbers instead of describing it from memory.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="try">
+      <div class="wrap">
+        <h2 id="try">Try the math</h2>
+        <p class="soft measure">This runs the same code the app uses. Pick a tremor, and the page builds a fake 11-second sensor recording, complete with uneven timing and random noise, then analyzes it exactly as the app would.</p>
+        <div class="lab">
+          <div class="controls">
+            <div class="control">
+              <label for="f">Shaking speed <output id="f-out" class="num"></output></label>
+              <input id="f" type="range" min="3" max="12" step="0.1" value="5">
+            </div>
+            <div class="control">
+              <label for="a">Strength <output id="a-out" class="num"></output></label>
+              <input id="a" type="range" min="0" max="0.8" step="0.01" value="0.3">
+            </div>
+            <div class="control">
+              <label for="n">Random noise <output id="n-out" class="num"></output></label>
+              <input id="n" type="range" min="0" max="0.3" step="0.01" value="0.05">
+            </div>
+            <label class="check"><input id="mistake" type="checkbox">
+              <span>Combine X, Y and Z before analyzing (the mistake in my first plan)</span></label>
+          </div>
+          <div class="charts">
+            <p class="chart-label">What the sensor records (first 2 seconds)</p>
+            <div class="paper"><canvas id="demo-signal" aria-hidden="true"></canvas></div>
+            <p class="chart-label">What the FFT finds: shaking at each speed</p>
+            <div class="paper"><canvas id="demo-spectrum" role="img" aria-label="Frequency spectrum of the simulated recording"></canvas></div>
+            <p class="found" id="found" aria-live="polite"></p>
+            <p id="mistake-note" class="measure" hidden></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="how">
+      <div class="wrap">
+        <h2 id="how">How a test works</h2>
+        <ol class="steps">
+          <li><h3>Record</h3><p class="soft">The phone rests on the back of the hand, or on an outstretched palm. For 11 seconds, the accelerometer reports movement in three directions (X, Y and Z) about 60 to 100 times a second.</p></li>
+          <li><h3>Line up the readings</h3><p class="soft">Phones don't report at perfectly even times, so the readings are placed onto an even grid of 50 per second using smooth curves between points.</p></li>
+          <li><h3>Remove slow movement</h3><p class="soft">A high-pass filter removes anything slower than one shake per second, like gravity and the arm slowly drifting. What's left is the fast shaking.</p></li>
+          <li><h3>Find the rhythm</h3><p class="soft">A Fast Fourier Transform (FFT) breaks the movement into how much shaking happens at each speed. The tallest peak between 3 and 12 shakes per second (Hz) is the tremor.</p></li>
+          <li><h3>Save and report</h3><p class="soft">The speed and strength are saved on the phone. Over days and weeks, the tests add up to a printable report for the doctor.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="tested">
+      <div class="wrap">
+        <h2 id="tested">How I tested it</h2>
+        <p class="soft measure">To trust the numbers, I fed in fake tremors where I already knew the right answer and checked that TremorSense found it. These tests are running live in your browser right now.</p>
+        <table>
+          <thead><tr><th scope="col">Tremor fed in</th><th scope="col">TremorSense found</th><th scope="col">Result</th></tr></thead>
+          <tbody id="tests"></tbody>
+        </table>
+        <div class="story">
+          <h3>Two problems the tests caught</h3>
+          <p><strong>A fake peak at double the speed.</strong> My first plan combined the three directions into one number before analyzing. Because that number is never negative, a 5 Hz tremor showed up as 10 Hz, and an 8 Hz tremor disappeared completely because 16 Hz is outside the search range. Tick the box in "Try the math" to see it happen. TremorSense now analyzes each direction separately and combines the results afterward.</p>
+          <p><strong>Fast tremors measured too weak.</strong> At 12 Hz, the strength came out about 20% too low. Connecting readings with straight lines was flattening the fastest wiggles, so I switched to smooth curves and used finer frequency steps. Now every test is within 10%.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="report">
+      <div class="wrap">
+        <h2 id="report">The doctor report</h2>
+        <figure class="report-fig">
+          <img src="images/sample-report.png" width="935" height="1210"
+               alt="A one-page tremor report with a summary table, a strength-over-time chart and a list of tests">
+          <figcaption class="story">
+            <p>After a few days of tests, the app makes a one-page report that can be printed or saved as a PDF. It shows the typical tremor speed and strength for each position, a chart of how strength changed over time, and every test with its date.</p>
+            <p class="soft">This sample was made with practice data, not a real patient.</p>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="limits">
+      <div class="wrap">
+        <h2 id="limits">What it can't do</h2>
+        <ul class="limits">
+          <li><strong>It doesn't diagnose anything.</strong> Different conditions can cause tremors at similar speeds. TremorSense measures, and a doctor decides what it means.</li>
+          <li><strong>Phones differ.</strong> Sensors vary between models, so results are best compared on the same phone.</li>
+          <li><strong>It hasn't been clinically tested.</strong> It's been checked against known signals, not against medical equipment.</li>
+          <li><strong>It's private.</strong> There are no accounts and no server. Results never leave the phone.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p>Made by Abhinav for the 2026 Congressional App Challenge.</p>
+      <p class="soft">The code is open on <a href="https://github.com/abhinav360k-rgb/tremorsense">GitHub</a>. I used AI tools to help build parts of this project. The <a href="https://github.com/abhinav360k-rgb/tremorsense#ai-use-disclosure-congressional-app-challenge">README</a> lists exactly which parts.</p>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { analyze, synthesize, BAND_LOW, BAND_HIGH, MAX_DISPLAY_HZ } from './js/dsp.js';
+
+    const $ = (s) => document.querySelector(s);
+    const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    const font = () => getComputedStyle(document.body).fontFamily;
+    function setup(c) {
+      const dpr = window.devicePixelRatio || 1;
+      c.width = Math.round(c.clientWidth * dpr); c.height = Math.round(c.clientHeight * dpr);
+      const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return [ctx, c.clientWidth, c.clientHeight];
+    }
+
+    // Hero: a static tremor trace across the page
+    function drawHero() {
+      const [ctx, W, H] = setup($('#hero-trace'));
+      ctx.strokeStyle = cssVar('--pen'); ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 2) {
+        const s = x / 90;
+        const env = 0.25 + 0.75 * Math.pow(Math.sin(Math.PI * Math.min(1, x / W)), 2);
+        const y = H / 2 - env * (H / 2 - 16) * (0.85 * Math.sin(2 * Math.PI * s * 1.1) + 0.15 * Math.sin(2 * Math.PI * s * 3.7));
+        x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    // Try the math
+    function simulate() {
+      const f = +$('#f').value, a = +$('#a').value, n = +$('#n').value;
+      $('#f-out').textContent = `${f.toFixed(1)} Hz`;
+      $('#a-out').textContent = `${a.toFixed(2)} m/s²`;
+      $('#n-out').textContent = `${n.toFixed(2)} m/s²`;
+      // The app uses acceleration with gravity removed, so remove it here too.
+      let samples = synthesize({ freqHz: f, amp: a, noise: n, seed: 7, drift: 0.05 }).map((s) => ({ ...s, z: s.z - 9.81 }));
+      const mistake = $('#mistake').checked;
+      if (mistake) samples = samples.map((s) => ({ t: s.t, x: Math.hypot(s.x, s.y, s.z), y: 0, z: 0 }));
+      const r = analyze(samples);
+      drawSignal(samples, mistake);
+      drawSpectrum(r);
+      const real = a >= 0.05;
+      $('#found').innerHTML = r.peakAmp < 0.05
+        ? 'TremorSense finds: <strong>no clear tremor</strong>'
+        : `TremorSense finds: <strong>${r.peakHz.toFixed(1)} Hz</strong> at ${r.peakAmp.toFixed(2)} m/s²`;
+      const note = $('#mistake-note');
+      note.hidden = !mistake;
+      if (mistake && real) {
+        if (r.peakAmp < 0.05) {
+          note.innerHTML = `<span class="warn">Wrong answer.</span> Combining the directions first doubles the speed to ${(2 * f).toFixed(1)} Hz, which is outside the 3–12 Hz search range, so the tremor disappears.`;
+        } else if (Math.abs(r.peakHz - 2 * f) < 0.5) {
+          note.innerHTML = `<span class="warn">Wrong answer.</span> The real tremor is ${f.toFixed(1)} Hz. Combining the directions first turns every downward swing upward, so the shaking looks twice as fast and about a third as strong.`;
+        } else {
+          note.textContent = 'Combining the directions first distorts the result. Try a slower shaking speed to see the doubled peak clearly.';
+        }
+      } else if (mistake) {
+        note.textContent = 'Add some strength to see what goes wrong.';
+      }
+    }
+
+    function drawSignal(samples, mistake) {
+      const [ctx, W, H] = setup($('#demo-signal'));
+      const k = 'x';
+      const pts = samples.filter((s) => s.t <= 2000);
+      const mean = pts.reduce((m, s) => m + s[k], 0) / pts.length;
+      const max = Math.max(0.3, ...pts.map((s) => Math.abs(s[k] - (mistake ? 0 : mean))));
+      ctx.strokeStyle = cssVar('--pen'); ctx.lineWidth = 2; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      pts.forEach((s, i) => {
+        const v = mistake ? s[k] - max / 2 : s[k] - mean;
+        const x = (s.t / 2000) * W, y = H / 2 - (v / max) * (H / 2 - 10);
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    function drawSpectrum(r) {
+      const [ctx, W, H] = setup($('#demo-spectrum'));
+      const pad = { l: 16, r: 16, t: 30, b: 28 };
+      const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+      const maxA = Math.max(0.1, ...r.amplitude) * 1.15;
+      const X = (f) => pad.l + (f / MAX_DISPLAY_HZ) * pw;
+      const Y = (a) => pad.t + ph - (a / maxA) * ph;
+      ctx.fillStyle = cssVar('--band-a'); ctx.fillRect(X(BAND_LOW), pad.t, X(7) - X(BAND_LOW), ph);
+      ctx.fillStyle = cssVar('--band-b'); ctx.fillRect(X(7), pad.t, X(BAND_HIGH) - X(7), ph);
+      ctx.fillStyle = cssVar('--ink-soft'); ctx.font = `15px ${font()}`; ctx.textAlign = 'center';
+      ctx.fillText('search range: 3–12 Hz', (X(BAND_LOW) + X(BAND_HIGH)) / 2, pad.t - 10);
+      for (let f = 0; f <= MAX_DISPLAY_HZ; f += 5) ctx.fillText(f === 20 ? '20 Hz' : String(f), Math.min(X(f), W - 22), H - 8);
+      ctx.beginPath();
+      r.freqs.forEach((f, i) => { const x = X(f), y = Y(r.amplitude[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+      ctx.strokeStyle = cssVar('--ink'); ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.stroke();
+      if (r.peakAmp >= 0.05) {
+        const px = X(r.peakHz), py = Y(r.peakAmp);
+        ctx.fillStyle = cssVar('--pen'); ctx.beginPath(); ctx.arc(px, py, 6, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    // Validation tests, run live
+    function runTests() {
+      const cases = [
+        { freqHz: 4, amp: 0.3 }, { freqHz: 5, amp: 0.5 }, { freqHz: 6, amp: 0.1 }, { freqHz: 8, amp: 0.3 },
+        { freqHz: 10, amp: 0.2 }, { freqHz: 12, amp: 0.4 }, { freqHz: 5, amp: 0.3, rate: 100 },
+      ];
+      const rows = cases.map((c) => {
+        const r = analyze(synthesize(c));
+        const ok = Math.abs(r.peakHz - c.freqHz) <= 0.15 && Math.abs(r.peakAmp - c.amp) / c.amp <= 0.1;
+        return `<tr><td>${c.freqHz} Hz, ${c.amp.toFixed(2)} m/s²${c.rate ? ' (faster sensor)' : ''}</td>
+          <td>${r.peakHz.toFixed(2)} Hz, ${r.peakAmp.toFixed(3)} m/s²</td><td class="${ok ? 'pass' : 'fail'}">${ok ? 'Pass' : 'Fail'}</td></tr>`;
+      });
+      const still = analyze(synthesize({ amp: 0, noise: 0.02 }));
+      const ok = still.peakAmp < 0.05;
+      rows.push(`<tr><td>Steady hand, no tremor</td><td>${ok ? 'No clear tremor' : `${still.peakAmp.toFixed(3)} m/s²`}</td><td class="${ok ? 'pass' : 'fail'}">${ok ? 'Pass' : 'Fail'}</td></tr>`);
+      $('#tests').innerHTML = rows.join('');
+    }
+
+    ['#f', '#a', '#n', '#mistake'].forEach((s) => $(s).addEventListener('input', simulate));
+    function drawAll() { drawHero(); simulate(); }
+    window.addEventListener('resize', drawAll);
+    document.fonts && document.fonts.ready.then(drawAll);
+    drawAll();
+    runTests();
+  </script>
+</body>
+</html>

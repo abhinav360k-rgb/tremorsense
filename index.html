@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>TremorSense: measure hand tremor with your phone</title>
+  <meta name="description" content="A free app that uses your phone's motion sensor to measure how fast and how strongly your hand shakes, so you can bring real numbers to your doctor.">
+
+  <link rel="canonical" href="https://abhinav360k-rgb.github.io/tremorsense/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TremorSense">
+  <meta property="og:title" content="TremorSense: measure hand tremor with your phone">
+  <meta property="og:description" content="Uses your phone's motion sensor to measure how fast and how strongly your hand shakes, so you can bring real numbers to your doctor.">
+  <meta property="og:url" content="https://abhinav360k-rgb.github.io/tremorsense/">
+  <meta property="og:image" content="https://abhinav360k-rgb.github.io/tremorsense/icons/share.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="A red tremor trace on green chart paper with the word TremorSense">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <meta name="theme-color" content="#FBFCFA" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#142120" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="TremorSense">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="app">
+
+    <!-- HOME -->
+    <section id="screen-home" class="screen" aria-labelledby="home-title">
+      <div class="home-intro">
+        <div class="wordmark">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M2 22 H9 L12 15 L16 29 L20 9 L24 31 L27 17 L30 24 L32 22 H38" fill="none" stroke="var(--pen)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h1 id="home-title">TremorSense</h1>
+        </div>
+        <p class="soft">Measures how fast and how strongly your hand shakes, so you can show your doctor real numbers.</p>
+      </div>
+
+      <figure class="paper" style="margin-block:0">
+        <canvas id="home-trace" height="120" role="img" aria-label="Your most recent tremor trace"></canvas>
+      </figure>
+      <p class="paper-note" id="home-trace-note">No recordings yet</p>
+
+      <p class="last-line" id="last-line">Your first test takes about 30 seconds.</p>
+
+      <button class="btn btn-main" data-go="screen-position">Start a test</button>
+
+      <button class="nav-row" data-go="screen-history">
+        <span>Past results</span>
+        <span class="soft" id="history-count">None yet</span>
+      </button>
+      <button class="nav-row nav-row-next" data-go="screen-report">
+        <span>Doctor report</span>
+        <span class="soft">Print or save as PDF</span>
+      </button>
+
+      <p class="footnote">TremorSense measures movement. It can't tell you whether you have a condition. Only a doctor can. Your results never leave this phone.</p>
+      <a class="text-btn" href="about.html">How TremorSense works</a>
+      <button class="text-btn" id="demo-toggle">Try it without a phone (demo data)</button>
+    </section>
+
+    <!-- CHOOSE POSITION -->
+    <section id="screen-position" class="screen" hidden aria-labelledby="pos-title">
+      <button class="back" data-go="screen-home">‹ Back</button>
+      <h2 id="pos-title">Which test?</h2>
+      <p class="soft">Some tremors show up when your hand is relaxed, others when you hold it up. Doctors check both.</p>
+
+      <div class="options">
+        <button class="option" data-position="rest">
+          <svg viewBox="0 0 112 80" aria-hidden="true">
+            <path class="surface" d="M4 66 H108"/>
+            <path d="M10 58 C10 51 20 47 34 47 H90 C99 47 104 51 104 55 C104 60 99 62 90 62 H20 C14 62 10 61 10 58 Z"/>
+            <path d="M88 51 H103 M88 56 H104 M30 47 C24 42 16 42 12 46"/>
+            <rect class="phone" x="46" y="37" width="34" height="9" rx="2"/>
+          </svg>
+          <span>
+            <span class="option-title">Resting hand</span>
+            <span class="option-text">Hand relaxed on your thigh, phone lying on the back of your hand.</span>
+          </span>
+        </button>
+        <button class="option" data-position="postural">
+          <svg viewBox="0 0 112 80" aria-hidden="true">
+            <circle cx="18" cy="15" r="9"/>
+            <path d="M18 25 V76"/>
+            <path d="M18 36 H84"/>
+            <path d="M80 39 H106"/>
+            <rect class="phone" x="83" y="30" width="22" height="6" rx="1.5"/>
+          </svg>
+          <span>
+            <span class="option-title">Arm held out</span>
+            <span class="option-text">Arm straight out in front of you, phone flat on your open palm.</span>
+          </span>
+        </button>
+      </div>
+    </section>
+
+    <!-- GET READY -->
+    <section id="screen-ready" class="screen" hidden aria-labelledby="ready-title">
+      <button class="back" data-go="screen-position">‹ Back</button>
+      <h2 id="ready-title">Get ready</h2>
+      <ol class="steps" id="ready-steps"></ol>
+      <p class="soft">After a 3-second countdown, the phone records for 11 seconds. Stay relaxed and don't try to stop any shaking.</p>
+      <p id="ready-error" class="error" role="alert" hidden></p>
+      <button class="btn btn-main" id="start-btn">Start recording</button>
+    </section>
+
+    <!-- RECORDING -->
+    <section id="screen-record" class="screen" hidden aria-live="polite" aria-labelledby="rec-status">
+      <div class="rec-head">
+        <p class="rec-status" id="rec-status">Get in position</p>
+        <span class="count" id="record-count">3</span>
+      </div>
+      <div class="paper">
+        <canvas id="live-trace" height="200" aria-hidden="true"></canvas>
+      </div>
+      <div class="timebar" aria-hidden="true"><span id="timebar-fill"></span></div>
+      <button class="btn btn-quiet" id="cancel-btn">Cancel</button>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="screen-result" class="screen" hidden aria-labelledby="result-headline">
+      <p class="soft small" id="result-when"></p>
+      <div class="reading">
+        <p class="reading-value" id="reading-value"></p>
+        <h2 id="result-headline"></h2>
+      </div>
+      <p id="result-detail"></p>
+
+      <div>
+        <p class="chart-title">Shaking at each speed</p>
+        <p class="chart-help">Each point on the line shows how much your hand moved at that many shakes per second (Hz).</p>
+      </div>
+      <figure class="paper" style="margin-block:0">
+        <canvas id="spectrum" height="240" role="img" aria-label="Frequency spectrum of your hand movement"></canvas>
+      </figure>
+
+      <dl class="facts">
+        <dt>Strongest rhythm</dt><dd id="fact-hz"></dd>
+        <dt>Strength</dt><dd id="fact-amp"></dd>
+        <dt>Test</dt><dd id="fact-pos"></dd>
+        <dt>Sensor speed</dt><dd id="fact-rate"></dd>
+      </dl>
+
+      <div class="actions">
+        <button class="btn btn-main" data-go="screen-home">Done</button>
+        <button class="btn btn-quiet" data-go="screen-position">Test again</button>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="screen-history" class="screen" hidden aria-labelledby="hist-title">
+      <button class="back" data-go="screen-home">‹ Back</button>
+      <h2 id="hist-title">Past results</h2>
+      <ul id="history-list" class="history"></ul>
+      <p id="history-empty" class="soft">Results show up here after your first test. Testing at the same time each day makes changes easier to spot.</p>
+    </section>
+
+    <!-- DOCTOR REPORT -->
+    <section id="screen-report" class="screen report" hidden aria-labelledby="report-title">
+      <button class="back no-print" data-go="screen-home">‹ Back</button>
+      <div class="report-head">
+        <div class="wordmark small-mark">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M2 22 H9 L12 15 L16 29 L20 9 L24 31 L27 17 L30 24 L32 22 H38" fill="none" stroke="var(--pen)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>TremorSense</span>
+        </div>
+        <h2 id="report-title">Tremor measurement report</h2>
+        <p class="soft small" id="report-made"></p>
+      </div>
+
+      <label class="name-field">
+        <span>Patient name</span>
+        <input id="report-name" type="text" autocomplete="name" placeholder="Optional">
+      </label>
+
+      <p id="report-empty" class="soft">There are no results to report yet. Take a test first, and the report fills in on its own.</p>
+
+      <div id="report-body">
+        <p id="report-span"></p>
+
+        <table class="summary-table">
+          <thead><tr><th scope="col">Test</th><th scope="col">Tests</th><th scope="col">Typical rhythm</th><th scope="col">Typical strength</th><th scope="col">Most recent</th></tr></thead>
+          <tbody id="report-summary"></tbody>
+        </table>
+
+        <div>
+          <p class="chart-title">Strength over time</p>
+          <p class="chart-help">Each mark is one test. Filled circles are resting-hand tests, open squares are arm-held-out tests.</p>
+        </div>
+        <figure class="paper report-paper" style="margin-block:0">
+          <canvas id="trend" height="200" role="img" aria-label="Tremor strength for each test over time"></canvas>
+        </figure>
+
+        <p class="chart-title">Every test</p>
+        <table class="all-table">
+          <thead><tr><th scope="col">Date</th><th scope="col">Test</th><th scope="col">Rhythm</th><th scope="col">Strength</th></tr></thead>
+          <tbody id="report-rows"></tbody>
+        </table>
+
+        <p class="method small">
+          <strong>How these numbers were measured.</strong> The phone's accelerometer recorded the hand for 11 seconds
+          (the first second is discarded). The signal was filtered to remove motion slower than 1 Hz, and a Fast Fourier
+          Transform found the strongest rhythm between 3 and 12 Hz. Strength is the size of that rhythm in m/s².
+          Phones differ, so compare results from the same phone. This report is a measurement, not a diagnosis.
+        </p>
+      </div>
+
+      <div class="actions no-print">
+        <button class="btn btn-main" id="print-btn">Print or save as PDF</button>
+      </div>
+    </section>
+
+  </main>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
