@@ -1,21 +1,23 @@
 /* TremorSense
-   Idea: a tremor recording is a pen trace on chart paper, so the
-   chart-paper strip is the one bold element. Everything else stays
-   plain: one column, left-aligned, rules instead of boxes.
+   Look: hospital ECG paper. White paper, pink grid, black pen trace.
+   Tulip red is the one strong color, used for main buttons and marks,
+   because the red tulip is the international symbol of Parkinson's.
    Built for shaky hands: 64px+ touch targets, high contrast. */
 
 :root {
   /* Color */
-  --paper: #FBFCFA;
-  --grid-minor: #E3EEE7;
-  --grid-major: #C3DACB;
-  --ink: #1B2A2F;
-  --ink-soft: #52646A;
-  --rule: #D5DFDA;
-  --pen: #C8312B;           /* recorder-pen red: only for traces and peaks */
-  --band-a: rgba(200, 120, 20, 0.13);
-  --band-b: rgba(40, 90, 160, 0.11);
-  --on-ink: #FBFCFA;
+  --paper: #FFFFFF;
+  --grid-minor: #F9D9D9;    /* ECG small boxes */
+  --grid-major: #F0A9A9;    /* ECG large boxes */
+  --ink: #221B1C;
+  --ink-soft: #66595A;
+  --rule: #EADCDC;
+  --pen: #221B1C;           /* the trace is drawn in black ink, like an ECG */
+  --accent: #C8102E;        /* tulip red: buttons, peaks, doses */
+  --on-accent: #FFFFFF;
+  --band-a: rgba(230, 150, 30, 0.16);
+  --band-b: rgba(60, 100, 190, 0.12);
+  --wash: #FFF4F4;
 
   /* Spacing scale: everything uses these */
   --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
@@ -35,16 +37,18 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #142120;
-    --grid-minor: #1C2E2C;
-    --grid-major: #2A4440;
-    --ink: #E6EEEB;
-    --ink-soft: #9DB0AB;
-    --rule: #2C3F3C;
-    --pen: #FF7A6B;
-    --band-a: rgba(240, 160, 70, 0.14);
-    --band-b: rgba(110, 160, 240, 0.14);
-    --on-ink: #142120;
+    --paper: #181314;
+    --grid-minor: #2B2021;
+    --grid-major: #4A3233;
+    --ink: #F4EDED;
+    --ink-soft: #B8A8A9;
+    --rule: #3A2D2E;
+    --pen: #F4EDED;
+    --accent: #E8354F;
+    --on-accent: #FFFFFF;
+    --band-a: rgba(240, 160, 70, 0.16);
+    --band-b: rgba(110, 160, 240, 0.16);
+    --wash: #241A1B;
     color-scheme: dark;
   }
 }
@@ -78,13 +82,13 @@ p { margin: 0; }
 
 /* ---------- Buttons ---------- */
 button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-:focus-visible { outline: 3px solid var(--pen); outline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
 .btn {
   display: block; width: 100%; min-height: 72px; padding: var(--s4) var(--s5);
   border-radius: 14px; font-weight: 700; font-size: 23px; text-align: center;
 }
-.btn-main { background: var(--ink); color: var(--on-ink); border: 0; }
+.btn-main { background: var(--accent); color: var(--on-accent); border: 0; }
 .btn-main:active { opacity: 0.85; }
 .btn-quiet { background: none; border: 2px solid var(--ink); color: var(--ink); min-height: 64px; font-size: var(--t-body); }
 .back {
@@ -127,7 +131,8 @@ button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-c
   border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
   font-weight: 700; text-align: left;
 }
-.nav-row .soft { font-weight: 400; }
+.nav-row > span:first-child { white-space: nowrap; }
+.nav-row .soft { font-weight: 400; text-align: right; }
 .footnote { font-size: var(--t-small); color: var(--ink-soft); max-width: 30em; }
 
 /* ---------- Position choice ---------- */
@@ -151,7 +156,7 @@ button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-c
 
 /* ---------- Ready ---------- */
 .steps { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: var(--s3); }
-.error { padding: var(--s4); border-left: 4px solid var(--pen); background: var(--grid-minor); font-size: 18px; }
+.error { padding: var(--s4); border-left: 4px solid var(--accent); background: var(--wash); font-size: 18px; }
 .error[hidden] { display: none; }
 
 /* ---------- Recording ---------- */
@@ -159,7 +164,7 @@ button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-c
 .count { font-size: var(--t-reading); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
 .rec-status { font-size: var(--t-h3); font-weight: 700; }
 .timebar { height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; }
-.timebar span { display: block; height: 100%; width: 0; background: var(--ink); }
+.timebar span { display: block; height: 100%; width: 0; background: var(--accent); }
 
 /* ---------- Results ---------- */
 .reading { display: flex; flex-direction: column; gap: var(--s1); }
@@ -187,12 +192,11 @@ button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-c
 .demo-flag {
   position: fixed; left: 0; right: 0; bottom: 0;
   padding: var(--s2) var(--gutter) max(var(--s2), env(safe-area-inset-bottom));
-  background: var(--pen); color: #fff; font-size: var(--t-small); font-weight: 700; text-align: center;
+  background: var(--accent); color: var(--on-accent); font-size: var(--t-small); font-weight: 700; text-align: center;
 }
 body.demo #app { padding-bottom: calc(var(--s8) + var(--s5)); }
 
 /* ---------- Doctor report ---------- */
-.nav-row-next { border-top: 0; margin-top: calc(-1 * var(--s5)); }
 .report-head { display: flex; flex-direction: column; gap: var(--s2); }
 .small-mark { font-weight: 700; font-size: var(--t-small); color: var(--ink-soft); gap: var(--s2); }
 .small-mark svg { width: 24px; height: 24px; }
@@ -203,19 +207,19 @@ body.demo #app { padding-bottom: calc(var(--s8) + var(--s5)); }
   font: inherit; font-size: var(--t-body); color: var(--ink); background: transparent;
   border: 0; border-bottom: 2px solid var(--ink); padding: var(--s2) 0; min-height: 48px; border-radius: 0;
 }
-.name-field input:focus-visible { outline: none; border-bottom-color: var(--pen); }
+.name-field input:focus-visible { outline: none; border-bottom-color: var(--accent); }
 table { width: 100%; border-collapse: collapse; font-size: var(--t-small); font-variant-numeric: tabular-nums; }
 th { text-align: left; font-weight: 700; color: var(--ink-soft); padding: var(--s2) var(--s2) var(--s2) 0; border-bottom: 2px solid var(--ink); vertical-align: bottom; }
 td { padding: var(--s2) var(--s2) var(--s2) 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
 td:first-child { font-weight: 700; }
 .all-table td:first-child { font-weight: 400; }
-#trend { height: 200px; }
+#trend, #dose-chart { height: 200px; }
 .method { color: var(--ink-soft); max-width: 36em; }
 
 @media print {
   :root {
     --paper: #FFFFFF; --ink: #000000; --ink-soft: #444444; --rule: #BBBBBB;
-    --grid-minor: #E6EFE9; --grid-major: #C3DACB; --pen: #C8312B;
+    --grid-minor: #F9D9D9; --grid-major: #F0A9A9; --pen: #000000; --accent: #C8102E;
   }
   @page { margin: 16mm; }
   body { background: #fff; font-size: 12pt; }
@@ -223,11 +227,66 @@ td:first-child { font-weight: 700; }
   .screen:not(#screen-report), .no-print, .demo-flag { display: none !important; }
   .paper { margin: 0; border: 1px solid var(--grid-major); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .report { gap: 14pt; }
+  .report-block { gap: 8pt; }
   #report-body { gap: 14pt; }
   .name-field input { border-bottom: 1px solid #000; }
   .name-field input::placeholder { color: transparent; }
   h2 { font-size: 20pt; }
-  .summary-table, figure, .method { break-inside: avoid; }
+  .summary-table, figure, .method, .report-block { break-inside: avoid; }
+  .report-block:last-of-type { break-inside: auto; }
+  h3 { font-size: 14pt; }
   .chart-title { break-after: avoid; }
   .all-table tr { break-inside: avoid; }
 }
+
+/* ---------- Home additions ---------- */
+.nav-list { display: flex; flex-direction: column; }
+.nav-list .nav-row + .nav-row { border-top: 0; }
+.links { display: flex; flex-direction: column; margin-top: calc(-1 * var(--s3)); }
+
+/* ---------- Hand picker ---------- */
+.hand-pick { border: 0; margin: 0; padding: 0; min-width: 0; }
+.hand-pick legend { padding: 0; margin-bottom: var(--s2); font-weight: 700; }
+.segmented { display: grid; grid-template-columns: 1fr 1fr; border: 2px solid var(--ink); border-radius: 14px; overflow: hidden; }
+.segmented button { min-height: 64px; background: none; border: 0; font-weight: 700; color: var(--ink); }
+.segmented button + button { border-left: 2px solid var(--ink); }
+.segmented button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+
+/* ---------- Tapping test ---------- */
+.tap-pad {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--s5);
+  padding: var(--s6) var(--s4); border-radius: 20px; background: var(--wash);
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+.tap-target {
+  aspect-ratio: 1; width: 100%; max-width: 200px; justify-self: center;
+  border-radius: 50%; border: 4px solid var(--ink); background: var(--paper);
+  display: grid; place-items: center; touch-action: manipulation; padding: 0;
+}
+.tap-target span { width: 28%; height: 28%; border-radius: 50%; background: var(--ink); }
+.tap-target.next { border-color: var(--accent); box-shadow: 0 0 0 6px var(--wash), 0 0 0 9px var(--accent); }
+.tap-target.next span { background: var(--accent); }
+.tap-target:disabled { opacity: 0.4; }
+.tap-target.hit { transform: scale(0.96); }
+.tap-tally { font-size: var(--t-h3); font-weight: 700; text-align: center; }
+#tap-chart { height: 200px; }
+
+/* ---------- Medication ---------- */
+.confirm { padding: var(--s3) var(--s4); background: var(--wash); border-left: 4px solid var(--accent); font-weight: 700; }
+.confirm[hidden] { display: none; }
+.confirm button { margin-left: var(--s2); }
+.earlier summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; }
+.earlier-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); align-items: end; margin-top: var(--s3); }
+.time-field { display: flex; flex-direction: column; gap: var(--s1); font-size: var(--t-small); color: var(--ink-soft); }
+.time-field input {
+  font: inherit; font-size: var(--t-body); color: var(--ink); background: transparent; min-height: 64px;
+  border: 2px solid var(--ink); border-radius: 14px; padding: 0 var(--s3);
+}
+.dose-remove { background: none; border: 0; color: var(--ink-soft); text-decoration: underline; min-height: 48px; padding: 0 var(--s2); font-size: var(--t-small); }
+
+/* ---------- Report additions ---------- */
+.report-block { display: flex; flex-direction: column; gap: var(--s3); }
+.report-block[hidden] { display: none; }
+.report-block h3 { font-size: var(--t-h3); }
+.all-table .dose-row td { color: var(--accent); font-weight: 700; }
+#sample-fill[hidden], #sample-clear[hidden] { display: none; }
