@@ -29,6 +29,7 @@ Everything is saved only on the phone. The **doctor report** can be printed or s
 
 - **ECG paper and tulip red:** the app is built around a strip of hospital ECG paper (pink grid, black pen trace). It shows your last trace, moves live while recording, and holds every chart. The one strong color is tulip red, because the red tulip is the international symbol of Parkinson's.
 - **Features chosen from research on past winners:** earlier Parkinson's apps in the Challenge focused on diagnosis or therapy. TremorSense instead tracks how symptoms change over days and around medication, which a doctor can't see in a short visit.
+- **Layout modeled on real health apps:** a bottom tab bar (Today, Tests, Medicine, Report) like StrivePD and Medisafe; a "My day" timeline that puts doses and test results on one chart, like StrivePD's day view; and a daily checklist of short tests, like Apple's mPower Parkinson's study app.
 - **Atkinson Hyperlegible font:** designed by the Braille Institute for people with low vision, which is common among older adults.
 - **Big targets, few words:** every button is at least 64px tall, and each screen asks for one thing.
 - **No diagnosis language:** results describe the measurement and point to a doctor.

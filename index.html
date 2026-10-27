@@ -35,96 +35,156 @@
 <body>
   <main id="app">
 
-    <!-- HOME -->
-    <section id="screen-home" class="screen" aria-labelledby="home-title">
-      <div class="home-intro">
-        <div class="wordmark">
-          <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M2 22 H9 L12 15 L16 29 L20 9 L24 31 L27 17 L30 24 L32 22 H38" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <h1 id="home-title">TremorSense</h1>
+    <!-- TODAY (home) -->
+    <section id="screen-home" class="screen tab-screen" aria-labelledby="home-title">
+      <header class="tab-head">
+        <div class="brandline">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M2 22 H9 L12 15 L16 29 L20 9 L24 31 L27 17 L30 24 L32 22 H38" fill="none" stroke="var(--accent)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>TremorSense</span>
         </div>
-        <p class="soft">Measure your tremor at home, see how it changes around your medicine, and show your doctor real numbers.</p>
+        <h1 id="home-title">Today</h1>
+        <p class="tab-sub" id="today-date"></p>
+      </header>
+
+      <!-- My day: doses and tests on one timeline -->
+      <section class="group" aria-labelledby="day-title">
+        <div class="group-head">
+          <h2 id="day-title">My day</h2>
+          <span class="group-meta" id="day-count"></span>
+        </div>
+        <div class="panel">
+          <div class="paper day-paper"><canvas id="day-chart" role="img" aria-label="Today's doses and test results on a timeline"></canvas></div>
+          <div class="dose-bar">
+            <div>
+              <p class="dose-big" id="dose-big">No dose logged today</p>
+              <p class="dose-small" id="dose-small">Log each dose to see how your tremor changes after it.</p>
+            </div>
+            <button class="pill-btn" id="home-dose">Log dose</button>
+          </div>
+          <p class="legend"><span class="lg lg-dose"></span>Dose <span class="lg lg-rest"></span>Resting tremor <span class="lg lg-arm"></span>Arm held out <span class="lg lg-tap"></span>Tapping <span>Open marks are the left hand. Higher means stronger tremor.</span></p>
+        </div>
+      </section>
+
+      <!-- Today's checks -->
+      <section class="group" aria-labelledby="checks-title">
+        <div class="group-head">
+          <h2 id="checks-title">Today's checks</h2>
+          <span class="group-meta" id="checks-progress"></span>
+        </div>
+        <ul class="panel rows" id="checks"></ul>
+      </section>
+
+      <!-- Trends -->
+      <section class="group" aria-labelledby="trends-title">
+        <div class="group-head">
+          <h2 id="trends-title">Trends</h2>
+          <button class="group-link" data-go="screen-history">All results</button>
+        </div>
+        <ul class="panel rows" id="trends"></ul>
+      </section>
+
+      <!-- Last recording -->
+      <section class="group" aria-labelledby="trace-title">
+        <div class="group-head">
+          <h2 id="trace-title">Last tremor recording</h2>
+        </div>
+        <div class="panel">
+          <div class="paper"><canvas id="home-trace" role="img" aria-label="Your most recent tremor trace"></canvas></div>
+          <p class="panel-note" id="home-trace-note">No recordings yet</p>
+        </div>
+      </section>
+
+      <div class="panel sample-panel" id="sample-panel">
+        <p><strong>New here?</strong> Load a sample week to see how TremorSense looks after a few days of use. Sample entries are labeled everywhere and can be removed in one tap.</p>
+        <button class="pill-btn pill-quiet" id="sample-home">Load sample week</button>
       </div>
-
-      <figure class="paper" style="margin-block:0">
-        <canvas id="home-trace" role="img" aria-label="Your most recent tremor trace"></canvas>
-      </figure>
-      <p class="paper-note" id="home-trace-note">No recordings yet</p>
-
-      <p class="last-line" id="last-line">Your first test takes about 30 seconds.</p>
-
-      <div class="actions">
-        <button class="btn btn-main" data-go="screen-position">Start tremor test</button>
-        <button class="btn btn-quiet" data-go="screen-tap-ready">Tapping test</button>
-      </div>
-
-      <nav class="nav-list" aria-label="More">
-        <button class="nav-row" data-go="screen-meds">
-          <span>Medication log</span>
-          <span class="soft" id="dose-status">No doses logged</span>
-        </button>
-        <button class="nav-row" data-go="screen-history">
-          <span>Past results</span>
-          <span class="soft" id="history-count">None yet</span>
-        </button>
-        <button class="nav-row" data-go="screen-report">
-          <span>Doctor report</span>
-          <span class="soft">Print or save as PDF</span>
-        </button>
-      </nav>
+      <button class="text-btn" id="sample-home-clear" hidden>Remove sample data</button>
 
       <p class="footnote">TremorSense measures movement. It can't tell you whether you have a condition. Only a doctor can. Your results never leave this phone.</p>
       <div class="links">
         <a class="text-btn" href="about.html">How TremorSense works</a>
-        <button class="text-btn" id="demo-toggle">Try it without a phone (demo data)</button>
+        <button class="text-btn" id="demo-toggle">Try the tremor test without a phone (demo data)</button>
       </div>
     </section>
 
-    <!-- CHOOSE POSITION + HAND -->
-    <section id="screen-position" class="screen" hidden aria-labelledby="pos-title">
-      <button class="back" data-go="screen-home">‹ Back</button>
-      <h2 id="pos-title">Tremor test</h2>
+    <!-- TESTS tab -->
+    <section id="screen-tests" class="screen tab-screen" hidden aria-labelledby="tests-title">
+      <header class="tab-head">
+        <h1 id="tests-title">Tests</h1>
+        <p class="tab-sub">Each takes under a minute. Test both hands.</p>
+      </header>
 
-      <fieldset class="hand-pick">
-        <legend>Which hand are you testing?</legend>
-        <div class="segmented">
-          <button type="button" data-hand="left" aria-pressed="false">Left hand</button>
-          <button type="button" data-hand="right" aria-pressed="true">Right hand</button>
+      <div class="panel hand-panel">
+        <fieldset class="hand-pick">
+          <legend>Hand</legend>
+          <div class="segmented">
+            <button type="button" data-hand="left" aria-pressed="false">Left</button>
+            <button type="button" data-hand="right" aria-pressed="true">Right</button>
+          </div>
+        </fieldset>
+      </div>
+
+      <section class="group" aria-labelledby="tremor-tests">
+        <div class="group-head"><h2 id="tremor-tests">Tremor</h2><span class="group-meta">11 seconds</span></div>
+        <div class="panel rows">
+          <button class="option" data-position="rest">
+            <svg viewBox="0 0 112 80" aria-hidden="true">
+              <path class="surface" d="M4 66 H108"/>
+              <path d="M10 58 C10 51 20 47 34 47 H90 C99 47 104 51 104 55 C104 60 99 62 90 62 H20 C14 62 10 61 10 58 Z"/>
+              <path d="M88 51 H103 M88 56 H104 M30 47 C24 42 16 42 12 46"/>
+              <rect class="phone" x="46" y="37" width="34" height="9" rx="2"/>
+            </svg>
+            <span>
+              <span class="option-title">Resting hand</span>
+              <span class="option-text">Hand relaxed on your thigh, phone on the back of your hand.</span>
+            </span>
+            <span class="chev" aria-hidden="true">›</span>
+          </button>
+          <button class="option" data-position="postural">
+            <svg viewBox="0 0 112 80" aria-hidden="true">
+              <circle cx="18" cy="15" r="9"/>
+              <path d="M18 25 V76"/>
+              <path d="M18 36 H84"/>
+              <path d="M80 39 H106"/>
+              <rect class="phone" x="83" y="30" width="22" height="6" rx="1.5"/>
+            </svg>
+            <span>
+              <span class="option-title">Arm held out</span>
+              <span class="option-text">Arm straight out in front of you, phone flat on your palm.</span>
+            </span>
+            <span class="chev" aria-hidden="true">›</span>
+          </button>
         </div>
-      </fieldset>
+      </section>
 
-      <p class="soft">Some tremors show up when your hand is relaxed, others when you hold it up. Doctors check both.</p>
-      <div class="options">
-        <button class="option" data-position="rest">
-          <svg viewBox="0 0 112 80" aria-hidden="true">
-            <path class="surface" d="M4 66 H108"/>
-            <path d="M10 58 C10 51 20 47 34 47 H90 C99 47 104 51 104 55 C104 60 99 62 90 62 H20 C14 62 10 61 10 58 Z"/>
-            <path d="M88 51 H103 M88 56 H104 M30 47 C24 42 16 42 12 46"/>
-            <rect class="phone" x="46" y="37" width="34" height="9" rx="2"/>
-          </svg>
-          <span>
-            <span class="option-title">Resting hand</span>
-            <span class="option-text">Hand relaxed on your thigh, phone lying on the back of your hand.</span>
-          </span>
-        </button>
-        <button class="option" data-position="postural">
-          <svg viewBox="0 0 112 80" aria-hidden="true">
-            <circle cx="18" cy="15" r="9"/>
-            <path d="M18 25 V76"/>
-            <path d="M18 36 H84"/>
-            <path d="M80 39 H106"/>
-            <rect class="phone" x="83" y="30" width="22" height="6" rx="1.5"/>
-          </svg>
-          <span>
-            <span class="option-title">Arm held out</span>
-            <span class="option-text">Arm straight out in front of you, phone flat on your open palm.</span>
-          </span>
-        </button>
+      <section class="group" aria-labelledby="move-tests">
+        <div class="group-head"><h2 id="move-tests">Movement</h2><span class="group-meta">15 seconds</span></div>
+        <div class="panel rows">
+          <button class="option" data-go="screen-tap-ready">
+            <svg viewBox="0 0 112 80" aria-hidden="true">
+              <rect class="surface" x="16" y="6" width="80" height="68" rx="10"/>
+              <circle cx="40" cy="44" r="13"/>
+              <circle cx="72" cy="44" r="13"/>
+              <circle class="phone" cx="72" cy="44" r="4"/>
+              <path d="M60 22 C66 16 78 16 84 22"/>
+            </svg>
+            <span>
+              <span class="option-title">Tapping</span>
+              <span class="option-text">Tap two circles in turn, as fast and evenly as you can.</span>
+            </span>
+            <span class="chev" aria-hidden="true">›</span>
+          </button>
+        </div>
+      </section>
+
+      <div class="panel rows">
+        <button class="nav-row" data-go="screen-history"><span>Past results</span><span class="soft" id="history-count">None yet</span></button>
       </div>
     </section>
 
     <!-- GET READY -->
     <section id="screen-ready" class="screen" hidden aria-labelledby="ready-title">
-      <button class="back" data-go="screen-position">‹ Back</button>
+      <button class="back" data-go="screen-tests">‹ Tests</button>
       <h2 id="ready-title">Get ready</h2>
       <p class="soft" id="ready-sub"></p>
       <ol class="steps" id="ready-steps"></ol>
@@ -173,13 +233,13 @@
 
       <div class="actions">
         <button class="btn btn-main" data-go="screen-home">Done</button>
-        <button class="btn btn-quiet" data-go="screen-position">Test the other hand</button>
+        <button class="btn btn-quiet" id="other-hand-tremor">Test the other hand</button>
       </div>
     </section>
 
     <!-- TAPPING: READY -->
     <section id="screen-tap-ready" class="screen" hidden aria-labelledby="tap-title">
-      <button class="back" data-go="screen-home">‹ Back</button>
+      <button class="back" data-go="screen-tests">‹ Tests</button>
       <h2 id="tap-title">Tapping test</h2>
       <p class="soft">Doctors ask patients to tap quickly to check for slowness, another common sign of Parkinson's. This test measures how fast and how evenly you tap, and whether you slow down.</p>
 
@@ -241,14 +301,15 @@
 
       <div class="actions">
         <button class="btn btn-main" data-go="screen-home">Done</button>
-        <button class="btn btn-quiet" data-go="screen-tap-ready">Test the other hand</button>
+        <button class="btn btn-quiet" id="other-hand-tap">Test the other hand</button>
       </div>
     </section>
 
     <!-- MEDICATION LOG -->
-    <section id="screen-meds" class="screen" hidden aria-labelledby="meds-title">
-      <button class="back" data-go="screen-home">‹ Back</button>
-      <h2 id="meds-title">Medication log</h2>
+    <section id="screen-meds" class="screen tab-screen" hidden aria-labelledby="meds-title">
+      <header class="tab-head">
+        <h1 id="meds-title">Medicine</h1>
+      </header>
       <p class="soft">Tremor often gets worse as a dose of medicine wears off. Log each dose when you take it, and the doctor report will show how your tremor changes in the hours after.</p>
 
       <button class="btn btn-main" id="dose-now">I just took a dose</button>
@@ -276,21 +337,20 @@
 
     <!-- HISTORY -->
     <section id="screen-history" class="screen" hidden aria-labelledby="hist-title">
-      <button class="back" data-go="screen-home">‹ Back</button>
+      <button class="back" data-go="screen-home">‹ Today</button>
       <h2 id="hist-title">Past results</h2>
       <ul id="history-list" class="history"></ul>
       <p id="history-empty" class="soft">Results show up here after your first test. Testing at the same times each day makes changes easier to spot.</p>
     </section>
 
     <!-- DOCTOR REPORT -->
-    <section id="screen-report" class="screen report" hidden aria-labelledby="report-title">
-      <button class="back no-print" data-go="screen-home">‹ Back</button>
+    <section id="screen-report" class="screen tab-screen report" hidden aria-labelledby="report-title">
       <div class="report-head">
         <div class="wordmark small-mark">
           <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M2 22 H9 L12 15 L16 29 L20 9 L24 31 L27 17 L30 24 L32 22 H38" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span>TremorSense</span>
         </div>
-        <h2 id="report-title">Tremor and movement report</h2>
+        <h1 id="report-title">Tremor and movement report</h1>
         <p class="soft small" id="report-made"></p>
       </div>
 
@@ -366,6 +426,25 @@
     </section>
 
   </main>
+
+  <nav class="tabbar" id="tabbar" aria-label="Main">
+    <button data-tab="screen-home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 13 H6 L8 8 L11 18 L14 4 L17 16 L19 11 L20 13 H22"/></svg>
+      <span>Today</span>
+    </button>
+    <button data-tab="screen-tests">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="14" r="4"/><circle cx="16" cy="14" r="4"/><path d="M12 3 V7"/></svg>
+      <span>Tests</span>
+    </button>
+    <button data-tab="screen-meds">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-35 12 12)"/><path d="M9.2 8 L14.8 16"/></svg>
+      <span>Medicine</span>
+    </button>
+    <button data-tab="screen-report">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3 H14 L19 8 V21 H6 Z"/><path d="M9 12 H16 M9 16 H16 M14 3 V8 H19"/></svg>
+      <span>Report</span>
+    </button>
+  </nav>
   <script type="module" src="app.js"></script>
 </body>
 </html>

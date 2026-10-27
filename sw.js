@@ -1,6 +1,6 @@
 // Service worker: lets TremorSense open and run with no internet.
 // Bump VERSION whenever you change any app file so phones get the update.
-const VERSION = 'tremorsense-v6';
+const VERSION = 'tremorsense-v7';
 const FILES = [
   './',
   'index.html',

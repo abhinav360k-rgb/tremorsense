@@ -18,6 +18,9 @@
   --band-a: rgba(230, 150, 30, 0.16);
   --band-b: rgba(60, 100, 190, 0.12);
   --wash: #FFF4F4;
+  --bg: #F4F0F0;            /* page behind the panels */
+  --panel: #FFFFFF;
+  --panel-line: #E7DEDE;
 
   /* Spacing scale: everything uses these */
   --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
@@ -37,7 +40,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #181314;
+    --paper: #1E1819;
     --grid-minor: #2B2021;
     --grid-major: #4A3233;
     --ink: #F4EDED;
@@ -49,6 +52,9 @@
     --band-a: rgba(240, 160, 70, 0.16);
     --band-b: rgba(110, 160, 240, 0.16);
     --wash: #241A1B;
+    --bg: #120E0F;
+    --panel: #1E1819;
+    --panel-line: #2E2526;
     color-scheme: dark;
   }
 }
@@ -57,7 +63,7 @@
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--bg);
   color: var(--ink);
   font: var(--t-body)/1.45 var(--font);
 }
@@ -290,3 +296,116 @@ td:first-child { font-weight: 700; }
 .report-block h3 { font-size: var(--t-h3); }
 .all-table .dose-row td { color: var(--accent); font-weight: 700; }
 #sample-fill[hidden], #sample-clear[hidden] { display: none; }
+
+/* =========================================================
+   App shell: tab bar + grouped panels (like native health apps)
+   ========================================================= */
+body.has-tabs #app { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+body.demo.has-tabs #app { padding-bottom: calc(136px + env(safe-area-inset-bottom)); }
+body.has-tabs .demo-flag { bottom: calc(72px + env(safe-area-inset-bottom)); }
+
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  padding: 6px max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-bottom));
+  background: var(--panel); border-top: 1px solid var(--panel-line);
+}
+.tabbar[hidden] { display: none; }
+.tabbar button {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  min-height: 60px; padding: 6px 0 0; background: none; border: 0;
+  font-size: 14px; font-weight: 700; color: var(--ink-soft);
+}
+.tabbar svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tabbar button[aria-current="page"] { color: var(--accent); }
+
+.tab-screen { gap: var(--s5); }
+.tab-head { display: flex; flex-direction: column; gap: 2px; padding-top: var(--s2); }
+.tab-head h1 { font-size: clamp(34px, 10vw, var(--t-h1)); }
+.tab-sub { color: var(--ink-soft); font-size: 17px; }
+.brandline { display: flex; align-items: center; gap: var(--s2); font-weight: 700; font-size: 16px; color: var(--ink-soft); margin-bottom: var(--s2); }
+.brandline svg { width: 26px; height: 26px; }
+
+.group { display: flex; flex-direction: column; gap: var(--s2); }
+.group-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s3); padding: 0 var(--s1); }
+.group-head h2 { font-size: 22px; }
+.group-meta { font-size: 16px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.group-link { background: none; border: 0; padding: var(--s2) 0; min-height: 44px; color: var(--accent); font-weight: 700; font-size: 16px; }
+
+.panel { background: var(--panel); border: 1px solid var(--panel-line); border-radius: 18px; overflow: hidden; }
+.panel .paper { margin: 0; border-left: 0; border-right: 0; border-top: 0; }
+.panel-note { padding: var(--s3) var(--s4); font-size: 16px; color: var(--ink-soft); }
+.rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.rows > * + * { border-top: 1px solid var(--panel-line); }
+
+/* Tests tab options inside panels */
+.panel .option { padding: var(--s4); border: 0; grid-template-columns: 88px 1fr auto; }
+.panel .option + .option { border-top: 1px solid var(--panel-line); }
+.panel .option:last-child { border-bottom: 0; }
+.panel .option svg { width: 88px; height: 63px; }
+.panel .option svg rect.surface { stroke-dasharray: none; }
+.chev { font-size: 30px; color: var(--ink-soft); line-height: 1; }
+.panel .nav-row { padding: 0 var(--s4); border: 0; }
+.hand-panel { padding: var(--s4); }
+.hand-panel legend { font-size: 16px; color: var(--ink-soft); }
+@media (max-width: 360px) { .panel .option { grid-template-columns: 1fr auto; } .panel .option svg { display: none; } }
+
+/* My day */
+#day-chart { height: 170px; }
+.dose-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding: var(--s4); }
+.dose-big { font-weight: 700; font-size: 21px; line-height: 1.2; }
+.dose-small { font-size: 16px; color: var(--ink-soft); margin-top: 2px; }
+.pill-btn {
+  flex: none; min-height: 52px; padding: 0 var(--s5); border-radius: 999px; border: 0;
+  background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 18px;
+}
+.pill-btn:active { opacity: 0.85; }
+.pill-quiet { background: none; color: var(--accent); border: 2px solid var(--accent); }
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 0 var(--s4) var(--s4); font-size: 14px; color: var(--ink-soft); }
+.lg { display: inline-block; width: 12px; height: 12px; margin-right: -6px; vertical-align: -1px; }
+.lg-dose { width: 4px; height: 14px; background: var(--accent); }
+.lg-rest { border-radius: 50%; background: var(--ink); }
+.lg-arm { background: var(--ink); }
+.lg-tap { width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 12px solid var(--ink-soft); }
+
+/* Checks + trends rows */
+.check-row {
+  display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: var(--s3);
+  width: 100%; min-height: 68px; padding: var(--s2) var(--s4); background: none; border: 0; text-align: left;
+}
+.check-dot { width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid var(--panel-line); display: grid; place-items: center; }
+.check-row.done .check-dot { border-color: var(--accent); background: var(--accent); }
+.check-dot svg { width: 18px; height: 18px; fill: none; stroke: var(--on-accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.check-title { display: block; font-weight: 700; font-size: 18px; line-height: 1.2; }
+.check-sub { display: block; font-size: 15px; color: var(--ink-soft); }
+.check-val { font-weight: 700; font-size: 17px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.check-row:not(.done) .check-val { color: var(--accent); }
+
+.trend-row { display: grid; grid-template-columns: 1fr 112px; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); min-height: 76px; }
+.trend-label { display: block; font-size: 15px; color: var(--ink-soft); }
+.trend-value { display: block; font-weight: 700; font-size: 24px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.trend-value small { font-size: 15px; font-weight: 400; color: var(--ink-soft); margin-left: 3px; }
+.trend-change { display: block; font-size: 15px; color: var(--ink-soft); }
+.trend-row canvas { width: 112px; height: 44px; }
+.empty-row { padding: var(--s4); font-size: 17px; color: var(--ink-soft); }
+
+.sample-panel { padding: var(--s4); display: flex; flex-direction: column; gap: var(--s3); align-items: flex-start; font-size: 17px; }
+.sample-panel[hidden] { display: none; }
+#sample-home-clear[hidden] { display: none; }
+
+/* Screens outside tabs (test flows) keep the plain page */
+.screen:not(.tab-screen) .paper { background-color: var(--paper); }
+
+@media print { .tabbar { display: none !important; } body { background: #fff; } }
+
+/* Headings get focus for screen readers when a screen opens; no box needed. */
+[tabindex="-1"]:focus { outline: none; }
+
+@media (max-width: 380px) {
+  .dose-bar { flex-direction: column; align-items: stretch; }
+  .pill-btn { width: 100%; }
+  .trend-row { grid-template-columns: 1fr 80px; }
+  .trend-row canvas { width: 80px; }
+  .report table { display: block; overflow-x: auto; }
+}
+.report table { font-size: 15px; }

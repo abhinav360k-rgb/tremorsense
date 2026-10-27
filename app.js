@@ -68,20 +68,28 @@ function hoursSinceDose(dateIso, doses) {
 }
 
 // ---------- Navigation ----------
+const TABS = ['screen-home', 'screen-tests', 'screen-meds', 'screen-report'];
 function show(id) {
   $$('.screen').forEach((s) => (s.hidden = s.id !== id));
   window.scrollTo(0, 0);
+  // The tab bar shows on the four main screens and hides during a test.
+  const onTab = TABS.includes(id) || id === 'screen-history';
+  $('#tabbar').hidden = !onTab;
+  document.body.classList.toggle('has-tabs', onTab);
+  $$('[data-tab]').forEach((b) => (b.dataset.tab === id ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current')));
   const renderers = {
     'screen-home': renderHome, 'screen-history': renderHistory, 'screen-report': renderReport,
-    'screen-meds': renderMeds, 'screen-position': syncHand, 'screen-tap-ready': syncHand,
+    'screen-meds': renderMeds, 'screen-tests': renderTests, 'screen-tap-ready': syncHand,
   };
   if (renderers[id]) renderers[id]();
   const h = document.getElementById(id).querySelector('h1, h2');
   if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
 }
 document.addEventListener('click', (e) => {
-  const go = e.target.closest('[data-go]');
-  if (go) { stopRecording(); stopTapping(); show(go.dataset.go); }
+  const go = e.target.closest('[data-go], [data-tab]');
+  if (go) { stopRecording(); stopTapping(); show(go.dataset.go || go.dataset.tab); }
+  const start = e.target.closest('[data-start]');
+  if (start) startFromCheck(start.dataset.start);
   const pos = e.target.closest('[data-position]');
   if (pos) choosePosition(pos.dataset.position);
   const hand = e.target.closest('[data-hand]');
@@ -91,28 +99,191 @@ function syncHand() {
   $$('[data-hand]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.hand === state.hand)));
 }
 
-// ---------- Home ----------
-function renderHome() {
-  const all = loadResults();
-  const tremors = all.filter(isTremor);
-  $('#history-count').textContent = all.length ? String(all.length) : 'None yet';
-  const doses = loadDoses();
-  $('#dose-status').textContent = doses.length ? `Last dose ${agoShort(doses[0].date)}` : 'None logged';
+// ---------- Today (home) ----------
+// Daily checks, like the task list in Apple's mPower study app.
+const CHECKS = [
+  { key: 'rest-left', type: 'tremor', position: 'rest', hand: 'left', title: 'Resting tremor', sub: 'Left hand' },
+  { key: 'rest-right', type: 'tremor', position: 'rest', hand: 'right', title: 'Resting tremor', sub: 'Right hand' },
+  { key: 'tap-left', type: 'tap', hand: 'left', title: 'Tapping', sub: 'Left hand' },
+  { key: 'tap-right', type: 'tap', hand: 'right', title: 'Tapping', sub: 'Right hand' },
+];
+const isToday = (iso) => startOfDay(new Date(iso)).getTime() === startOfDay(new Date()).getTime();
+const CHECK_SVG = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5 L8.5 15 L16 6"/></svg>';
 
-  const last = tremors[0];
-  if (!last) {
-    $('#last-line').textContent = all.length ? 'Take a tremor test to see your trace here.' : 'Your first test takes about 30 seconds.';
-    $('#home-trace-note').textContent = 'No tremor recordings yet';
-    requestAnimationFrame(() => drawTrace($('#home-trace'), null));
-    return;
+function renderHome() {
+  const all = loadResults(), doses = loadDoses();
+  const today = all.filter((r) => isToday(r.date)), todayDoses = doses.filter((d) => isToday(d.date));
+  $('#today-date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+  $('#day-count').textContent = today.length || todayDoses.length
+    ? `${plural(today.length, 'test')}, ${plural(todayDoses.length, 'dose')}` : '';
+
+  // Dose status
+  if (doses.length) {
+    const h = (Date.now() - new Date(doses[0].date).getTime()) / 3600000;
+    $('#dose-big').textContent = h < 24 ? `Last dose ${durationText(h)} ago` : `Last dose ${agoShort(doses[0].date)}`;
+    $('#dose-small').textContent = `Taken ${formatDate(doses[0].date)}${doses[0].demo ? ' (sample)' : ''}`;
+  } else {
+    $('#dose-big').textContent = 'No doses logged yet';
+    $('#dose-small').textContent = 'Log each dose to see how your tremor changes after it.';
   }
-  const where = `${POSITION_NAMES[last.position].toLowerCase()}${last.hand ? `, ${last.hand} hand` : ''}`;
-  $('#last-line').innerHTML = last.summary.level === 'none'
-    ? `Last tremor test: <strong>no clear tremor</strong> (${where})`
-    : `Last tremor test: <strong>${last.peakHz.toFixed(1)} Hz</strong> (${where})`;
-  $('#home-trace-note').textContent = `Recorded ${formatDate(last.date)}${last.demo ? ', demo data' : ''}`;
-  requestAnimationFrame(() => drawTrace($('#home-trace'), last.trace));
+
+  // Checklist
+  let done = 0;
+  $('#checks').innerHTML = CHECKS.map((c) => {
+    const hit = today.find((r) => (c.type === 'tap' ? r.type === 'tap' : isTremor(r) && r.position === c.position) && r.hand === c.hand);
+    if (hit) done++;
+    const val = !hit ? 'Start ›' : c.type === 'tap' ? `${hit.rate.toFixed(1)} taps/s` : hit.summary.level === 'none' ? 'No tremor' : `${hit.peakAmp.toFixed(2)} m/s²`;
+    return `<li><button class="check-row${hit ? ' done' : ''}" data-start="${c.key}">
+      <span class="check-dot">${hit ? CHECK_SVG : ''}</span>
+      <span><span class="check-title">${c.title}</span><span class="check-sub">${c.sub}</span></span>
+      <span class="check-val">${val}</span></button></li>`;
+  }).join('');
+  $('#checks-progress').textContent = `${done} of ${CHECKS.length} done`;
+
+  renderTrends(all);
+
+  // Last tremor recording
+  const last = all.filter(isTremor).find((r) => r.trace && r.trace.length);
+  $('#home-trace-note').textContent = last
+    ? `${POSITION_NAMES[last.position]}, ${last.hand || ''} hand, ${formatDate(last.date)}${last.demo ? ' (demo data)' : ''}. ${last.summary.level === 'none' ? 'No clear tremor.' : `${last.peakHz.toFixed(1)} Hz, ${last.peakAmp.toFixed(2)} m/s².`}`
+    : 'Your next tremor test will be drawn here.';
+
+  const hasSample = all.some((r) => r.demo) || doses.some((d) => d.demo);
+  $('#sample-panel').hidden = all.length > 0 || doses.length > 0;
+  $('#sample-home-clear').hidden = !hasSample;
+
+  requestAnimationFrame(() => {
+    drawDay($('#day-chart'), today, todayDoses);
+    drawTrace($('#home-trace'), last ? last.trace : null);
+    drawSparks();
+  });
 }
+
+// Trends: latest value, change from last week, and a small chart.
+const TRENDS = [
+  { key: 'rest-right', label: 'Resting tremor, right hand', unit: 'm/s²', pick: (r) => isTremor(r) && r.position === 'rest' && r.hand === 'right', val: (r) => r.peakAmp, fmt: (v) => v.toFixed(2) },
+  { key: 'rest-left', label: 'Resting tremor, left hand', unit: 'm/s²', pick: (r) => isTremor(r) && r.position === 'rest' && r.hand === 'left', val: (r) => r.peakAmp, fmt: (v) => v.toFixed(2) },
+  { key: 'tap-right', label: 'Tapping speed, right hand', unit: 'taps/s', pick: (r) => r.type === 'tap' && r.hand === 'right', val: (r) => r.rate, fmt: (v) => v.toFixed(1) },
+  { key: 'tap-left', label: 'Tapping speed, left hand', unit: 'taps/s', pick: (r) => r.type === 'tap' && r.hand === 'left', val: (r) => r.rate, fmt: (v) => v.toFixed(1) },
+];
+let sparkData = [];
+function renderTrends(all) {
+  const weekAgo = Date.now() - 7 * 86400000;
+  sparkData = [];
+  const rows = TRENDS.map((t) => {
+    const rs = all.filter(t.pick).slice().reverse();         // oldest first
+    if (rs.length < 2) return '';
+    const latest = t.val(rs[rs.length - 1]);
+    const thisWeek = rs.filter((r) => new Date(r.date) >= weekAgo).map(t.val);
+    const before = rs.filter((r) => new Date(r.date) < weekAgo).map(t.val);
+    let change;
+    if (thisWeek.length && before.length) {
+      const pct = ((median(thisWeek) - median(before)) / median(before)) * 100;
+      change = Math.abs(pct) < 5 ? 'About the same as last week' : `${pct > 0 ? 'Up' : 'Down'} ${Math.round(Math.abs(pct))}% from last week`;
+    } else {
+      change = `${plural(rs.length, 'test')} since ${formatDay(new Date(rs[0].date))}`;
+    }
+    sparkData.push({ id: `spark-${t.key}`, values: rs.slice(-14).map(t.val) });
+    return `<li class="trend-row"><span><span class="trend-label">${t.label}</span>
+      <span class="trend-value">${t.fmt(latest)}<small>${t.unit}</small></span>
+      <span class="trend-change">${change}</span></span>
+      <canvas id="spark-${t.key}" aria-hidden="true"></canvas></li>`;
+  }).filter(Boolean);
+  $('#trends').innerHTML = rows.join('') || '<li class="empty-row">Trends appear once you have 2 or more tests of the same kind. Testing at the same times each day makes changes easier to spot.</li>';
+}
+function drawSparks() {
+  for (const { id, values } of sparkData) {
+    const c = document.getElementById(id);
+    if (!c) continue;
+    const ctx = setupCanvas(c), W = c.clientWidth, H = c.clientHeight;
+    const lo = Math.min(...values), hi = Math.max(...values), span = hi - lo || 1;
+    const X = (i) => 4 + (i / (values.length - 1)) * (W - 8);
+    const Y = (v) => H - 6 - ((v - lo) / span) * (H - 12);
+    ctx.strokeStyle = cssVar('--pen'); ctx.lineWidth = 2; ctx.lineJoin = 'round';
+    ctx.beginPath(); values.forEach((v, i) => (i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v)))); ctx.stroke();
+    ctx.fillStyle = cssVar('--accent');
+    ctx.beginPath(); ctx.arc(X(values.length - 1), Y(values[values.length - 1]), 4, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+// My day: hours across, tremor strength up; doses as red lines (like StrivePD's day view).
+function drawDay(canvas, tests, doses) {
+  const ctx = setupCanvas(canvas);
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  const font = getComputedStyle(document.body).fontFamily;
+  const nowH = (Date.now() - startOfDay(new Date()).getTime()) / 3600000;
+  const hours = [...tests, ...doses].map((x) => (new Date(x.date) - startOfDay(new Date())) / 3600000);
+  const startH = Math.max(0, Math.min(6, Math.floor(Math.min(nowH, ...hours))));
+  const endH = 24;
+  const pad = { l: 12, r: 12, t: 26, b: 26 };
+  const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+  const X = (h) => pad.l + ((h - startH) / (endH - startH)) * pw;
+  const tremors = tests.filter(isTremor), taps = tests.filter((r) => r.type === 'tap');
+  const maxA = Math.max(0.3, ...tremors.map((r) => r.peakAmp)) * 1.15;
+  const Y = (a) => pad.t + ph - 14 - (a / maxA) * (ph - 14);
+  ctx.clearRect(0, 0, W, H);
+  ctx.font = `13px ${font}`; ctx.textAlign = 'center'; ctx.fillStyle = cssVar('--ink-soft');
+  const step = W < 340 ? 6 : 3;
+  for (let h = Math.ceil(startH / step) * step; h <= endH; h += step) {
+    const label = h === 0 || h === 24 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`;
+    ctx.fillText(label, Math.min(Math.max(X(h), 22), W - 24), H - 8);
+  }
+  // Rest of the day is shaded: it hasn't happened yet.
+  if (nowH < endH) { ctx.fillStyle = cssVar('--wash'); ctx.globalAlpha = 0.7; ctx.fillRect(X(nowH), pad.t, X(endH) - X(nowH), ph); ctx.globalAlpha = 1; }
+  for (const d of doses) {
+    const h = (new Date(d.date) - startOfDay(new Date())) / 3600000, x = X(h);
+    ctx.strokeStyle = cssVar('--accent'); ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + ph); ctx.stroke();
+    ctx.fillStyle = cssVar('--accent'); ctx.font = `bold 13px ${font}`;
+    ctx.fillText('Dose', Math.min(Math.max(x, 20), W - 20), pad.t - 9);
+  }
+  for (const r of tremors) {
+    const h = (new Date(r.date) - startOfDay(new Date())) / 3600000;
+    const x = X(h), y = Y(r.peakAmp);
+    ctx.fillStyle = cssVar('--ink'); ctx.strokeStyle = cssVar('--ink'); ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (r.position === 'postural') ctx.rect(x - 5, y - 5, 10, 10); else ctx.arc(x, y, 5.5, 0, Math.PI * 2);
+    if (r.hand === 'left') { ctx.fillStyle = cssVar('--paper'); }
+    ctx.fill(); ctx.stroke();
+  }
+  for (const r of taps) {
+    const h = (new Date(r.date) - startOfDay(new Date())) / 3600000, x = X(h), y = pad.t + ph - 4;
+    ctx.fillStyle = cssVar('--ink-soft');
+    ctx.beginPath(); ctx.moveTo(x - 6, y); ctx.lineTo(x + 6, y); ctx.lineTo(x, y - 11); ctx.closePath(); ctx.fill();
+  }
+  // Now line
+  if (nowH <= endH) {
+    ctx.strokeStyle = cssVar('--ink'); ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(X(nowH), pad.t); ctx.lineTo(X(nowH), pad.t + ph); ctx.stroke(); ctx.setLineDash([]);
+    if (!doses.some((d) => Math.abs((new Date(d.date) - startOfDay(new Date())) / 3600000 - nowH) < 1.2)) {
+      ctx.fillStyle = cssVar('--ink'); ctx.font = `bold 13px ${font}`;
+      ctx.fillText('Now', Math.min(Math.max(X(nowH), 18), W - 18), pad.t - 9);
+    }
+  }
+  if (!tests.length && !doses.length) {
+    ctx.fillStyle = cssVar('--ink-soft'); ctx.font = `15px ${font}`;
+    ctx.fillText('Tests and doses you log today show up here', W / 2, pad.t + ph / 2);
+  }
+}
+
+// Start a test straight from the checklist, with the hand already chosen.
+function startFromCheck(key) {
+  const c = CHECKS.find((x) => x.key === key);
+  if (!c) return;
+  state.hand = c.hand; writeKey(KEYS.hand, c.hand); syncHand();
+  if (c.type === 'tap') show('screen-tap-ready'); else choosePosition(c.position);
+}
+
+function renderTests() {
+  syncHand();
+  const n = loadResults().length;
+  $('#history-count').textContent = n ? String(n) : 'None yet';
+}
+
+$('#home-dose').addEventListener('click', () => { logDose(new Date()); renderHome(); });
+$('#other-hand-tremor').addEventListener('click', () => { flipHand(); choosePosition(state.position); });
+$('#other-hand-tap').addEventListener('click', () => { flipHand(); show('screen-tap-ready'); });
+function flipHand() { state.hand = state.hand === 'left' ? 'right' : 'left'; writeKey(KEYS.hand, state.hand); syncHand(); }
 
 // A short slice of the recording, drawn like an ECG pen trace.
 function drawTrace(canvas, trace) {
@@ -597,7 +768,7 @@ function renderReport() {
   $('#report-name').value = readKey(KEYS.name) || '';
   $('#report-empty').hidden = list.length > 0;
   $('#report-body').hidden = list.length === 0;
-  $('#sample-fill').hidden = !(state.demo && list.length === 0);
+  $('#sample-fill').hidden = list.length > 0;
   $('#sample-clear').hidden = !loadResults().some((r) => r.demo);
   if (!list.length) return;
 
@@ -752,7 +923,7 @@ window.addEventListener('afterprint', () => { if (!$('#screen-report').hidden) r
 // ---------- Sample data (demo mode only) ----------
 // Lets judges and viewers see a full report without a week of testing.
 // Every sample entry is marked demo: true and labeled "sample" everywhere.
-$('#sample-fill').addEventListener('click', () => {
+function loadSample() {
   const results = [], doses = [];
   const day0 = startOfDay(new Date()).getTime() - 6 * 86400000;
   let seed = 11;
@@ -768,7 +939,8 @@ $('#sample-fill').addEventListener('click', () => {
       const amp = +(base * (pos === 'postural' ? 0.7 : 1) * (1 + 0.28 * (hoursAfter + jitter)) * (0.85 + 0.3 * rand())).toFixed(3);
       results.push({ id: t, type: 'tremor', date: new Date(t).toISOString(), position: pos, hand, demo: true,
         peakHz: +(pos === 'rest' ? 4.6 + rand() * 0.8 : 5.6 + rand() * 0.8).toFixed(2), peakAmp: amp, sampleRateHz: 60,
-        bandRatio: 0.8, freqs: [], amplitude: [], trace: [],
+        bandRatio: 0.8, freqs: [], amplitude: [],
+        trace: Array.from({ length: 150 }, (_, i) => +(amp * Math.sin(2 * Math.PI * 5 * i / 50) + (rand() - 0.5) * 0.03).toFixed(3)),
         summary: interpretTremor({ peakHz: 5, peakAmp: amp, bandRatio: 0.8 }, pos) });
     }
     for (const hand of ['left', 'right']) {
@@ -783,13 +955,15 @@ $('#sample-fill').addEventListener('click', () => {
   results.sort((a, b) => new Date(b.date) - new Date(a.date));
   writeKey(KEYS.results, JSON.stringify([...loadResults(), ...results].slice(0, MAX_SAVED)));
   saveDoses([...loadDoses(), ...doses]);
-  renderReport();
-});
-$('#sample-clear').addEventListener('click', () => {
+}
+$('#sample-fill').addEventListener('click', () => { loadSample(); renderReport(); });
+$('#sample-home').addEventListener('click', () => { loadSample(); renderHome(); });
+$('#sample-home-clear').addEventListener('click', () => { clearSample(); renderHome(); });
+function clearSample() {
   writeKey(KEYS.results, JSON.stringify(loadResults().filter((r) => !r.demo)));
   saveDoses(loadDoses().filter((d) => !d.demo));
-  renderReport();
-});
+}
+$('#sample-clear').addEventListener('click', () => { clearSample(); renderReport(); });
 
 // ---------- Helpers ----------
 function formatDate(iso) {
@@ -843,7 +1017,7 @@ $('#demo-toggle').addEventListener('click', () => {
 });
 
 // Redraw charts if the phone is rotated
-window.addEventListener('resize', () => { if (!$('#screen-home').hidden) renderHome(); });
+window.addEventListener('resize', () => { if (!$('#screen-home').hidden) renderHome(); else if (!$('#screen-report').hidden) renderReport(); });
 
 // ---------- Install / offline ----------
 if ('serviceWorker' in navigator) {
@@ -851,4 +1025,4 @@ if ('serviceWorker' in navigator) {
 }
 
 syncHand();
-renderHome();
+show('screen-home');
